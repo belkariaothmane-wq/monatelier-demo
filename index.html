@@ -1396,18 +1396,18 @@ function openSheet(id) {
 function buildForm(type) {
   const forms = {
     'new-devis': `<div class="sheet-handle"></div><div class="sheet-title">Nouveau devis</div>
-      <div class="fg"><label>Client</label><input type="text" placeholder="Nom du client"></div>
-      <div class="fg"><label>Objet des travaux</label><input type="text" placeholder="Ex : Remplacement chaudière"></div>
-      <div class="fg"><label>Montant estimé (€ HT)</label><input type="number" placeholder="0"></div>
-      <div class="fg"><label>Notes</label><textarea placeholder="Détails, contraintes, accès..."></textarea></div>
-      <button class="btn-p" onclick="formSubmit('Devis créé et enregistré')">Créer le devis</button>
+      <div class="fg"><label>Client</label><input id="nd-client" type="text" placeholder="Nom du client"></div>
+      <div class="fg"><label>Objet des travaux</label><input id="nd-objet" type="text" placeholder="Ex : Remplacement chaudière"></div>
+      <div class="fg"><label>Montant estimé (€ HT)</label><input id="nd-montant" type="number" placeholder="0" min="0"></div>
+      <div class="fg"><label>Notes</label><textarea id="nd-notes" placeholder="Détails, contraintes, accès..."></textarea></div>
+      <button class="btn-p" id="nd-btn" onclick="submitNewDevis()">Créer le devis</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'new-facture': `<div class="sheet-handle"></div><div class="sheet-title">Nouvelle facture</div>
-      <div class="fg"><label>Client</label><input type="text" placeholder="Nom ou entreprise"></div>
-      <div class="fg"><label>Objet</label><input type="text" placeholder="Ex : Chantier Villa Garance"></div>
-      <div class="fg"><label>Montant HT (€)</label><input type="number" placeholder="0"></div>
-      <div class="fg"><label>Date d'échéance</label><input type="date"></div>
-      <button class="btn-p" onclick="formSubmit('Facture créée — F-2024-199')">Créer la facture</button>
+      <div class="fg"><label>Client</label><input id="nf-client" type="text" placeholder="Nom ou entreprise"></div>
+      <div class="fg"><label>Objet</label><input id="nf-objet" type="text" placeholder="Ex : Chantier Villa Garance"></div>
+      <div class="fg"><label>Montant HT (€)</label><input id="nf-montant" type="number" placeholder="0" min="0"></div>
+      <div class="fg"><label>Date d'échéance</label><input id="nf-echeance" type="date"></div>
+      <button class="btn-p" id="nf-btn" onclick="submitNewFacture()">Créer la facture</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'new-client': `<div class="sheet-handle"></div><div class="sheet-title">Nouveau client</div>
       <div class="fg"><label>Prénom et nom</label><input type="text" placeholder="Ex : Sophie Blanc"></div>
@@ -1472,6 +1472,55 @@ function formSubmit(msg) {
   setTimeout(() => { closeSheet(); showToast(msg); }, 1100);
 }
 
+async function submitNewDevis() {
+  const client = (document.getElementById('nd-client')?.value || '').trim();
+  const objet  = (document.getElementById('nd-objet')?.value  || '').trim();
+  const montant = parseFloat(document.getElementById('nd-montant')?.value) || 0;
+  const notes  = (document.getElementById('nd-notes')?.value  || '').trim();
+  if (!client || !objet) { showToast('Client et objet sont requis'); return; }
+  const btn = document.getElementById('nd-btn');
+  btn.textContent = 'Enregistrement...'; btn.classList.add('loading');
+  try {
+    const res = await fetch(DEVIS_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Client: client, Objet: objet, Montant_HT: montant, Notes: notes, Statut: 'Brouillon' })
+    });
+    if (!res.ok) throw new Error('http ' + res.status);
+    closeSheet();
+    showToast('Devis créé — brouillon enregistré');
+    loadDevisFromAirtable();
+  } catch(e) {
+    btn.textContent = 'Créer le devis'; btn.classList.remove('loading');
+    showToast('Erreur réseau — réessaie');
+  }
+}
+
+async function submitNewFacture() {
+  const client  = (document.getElementById('nf-client')?.value   || '').trim();
+  const objet   = (document.getElementById('nf-objet')?.value    || '').trim();
+  const montantHT = parseFloat(document.getElementById('nf-montant')?.value) || 0;
+  const echeance  = document.getElementById('nf-echeance')?.value || '';
+  if (!client || !objet) { showToast('Client et objet sont requis'); return; }
+  const btn = document.getElementById('nf-btn');
+  btn.textContent = 'Enregistrement...'; btn.classList.add('loading');
+  const montantTTC = Math.round(montantHT * 1.1 * 100) / 100;
+  try {
+    const res = await fetch(FACTURES_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Client: client, Objet: objet, Montant_HT: montantHT, Montant_TTC: montantTTC, Date_Echeance: echeance, Statut: 'Envoyée' })
+    });
+    if (!res.ok) throw new Error('http ' + res.status);
+    closeSheet();
+    showToast('Facture créée et enregistrée');
+    loadFacturesFromAirtable();
+  } catch(e) {
+    btn.textContent = 'Créer la facture'; btn.classList.remove('loading');
+    showToast('Erreur réseau — réessaie');
+  }
+}
+
 function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
 function handleOverlayClick(e) { if (e.target === document.getElementById('overlay')) closeSheet(); }
 
@@ -1504,6 +1553,8 @@ function renderBarChart() {
 // ── Devis & Factures Airtable ──────────────────────────────────
 const DEVIS_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-devis';
 const FACTURES_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-factures';
+const DEVIS_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-devis';
+const FACTURES_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-facture';
 const AIRTABLE_DEVIS = {};
 const AIRTABLE_FACTURES = {};
 
@@ -1734,6 +1785,8 @@ async function loadMailsFromAirtable() {
 
 loadMailsFromAirtable();
 setInterval(loadMailsFromAirtable, 60000);
+loadDevisFromAirtable();
+loadFacturesFromAirtable();
 
 function loadAirtableMailDetail(id) {
   const record = AIRTABLE_MAILS[id];
