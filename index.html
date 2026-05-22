@@ -1557,6 +1557,8 @@ async function submitNewClient() {
   const email   = (document.getElementById('nc-email')?.value   || '').trim();
   const adresse = (document.getElementById('nc-adresse')?.value || '').trim();
   if (!nom) { showToast('Le nom est requis'); return; }
+  const doublon = Object.values(AIRTABLE_CLIENTS).find(r => (r.fields.Nom || '').toLowerCase() === nom.toLowerCase());
+  if (doublon) { showToast('Ce client existe déjà'); return; }
   const btn = document.getElementById('nc-btn');
   btn.textContent = 'Enregistrement...'; btn.classList.add('loading');
   try {
