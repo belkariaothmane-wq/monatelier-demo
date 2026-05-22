@@ -766,6 +766,8 @@
     <span class="hdr-back-title">Mes clients</span>
   </header>
   <div class="sec" style="margin-top:16px">
+    <input type="search" id="clients-search" placeholder="Rechercher un client..." oninput="filterClients(this.value)"
+      style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--card);color:var(--text);outline:none;margin-bottom:10px;display:block">
     <div class="card-list" id="at-clients-container">
       <div class="client-item" onclick="showView('client-detail','berger')">
         <div class="client-av">SB</div>
@@ -1531,21 +1533,37 @@ async function loadClientsFromAirtable() {
   } catch(e) {}
 }
 
+function filterClients(query) {
+  const container = document.getElementById('at-clients-container');
+  if (!container) return;
+  const records = Object.values(AIRTABLE_CLIENTS);
+  if (!records.length) return;
+  const q = query.toLowerCase().trim();
+  const filtered = q ? records.filter(r => (r.fields.Nom || '').toLowerCase().includes(q)) : records;
+  container.innerHTML = filtered.length
+    ? filtered.map(r => atClientItemHTML(r)).join('')
+    : '<div class="empty">Aucun client trouvé</div>';
+  lucide.createIcons();
+}
+
 function openAtClientSheet(id) {
   const record = AIRTABLE_CLIENTS[id];
   if (!record) return;
   const f = record.fields;
   const overlay = document.getElementById('overlay');
   const content = document.getElementById('sheet-content');
+  const telBtn  = f.Tel   ? `<a href="tel:${f.Tel}" class="btn-p" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:10px"><i data-lucide="phone" width="15" height="15"></i> Appeler</a>` : '';
+  const mailBtn = f.Email ? `<a href="mailto:${f.Email}" class="btn-s" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:10px"><i data-lucide="mail" width="15" height="15"></i> Envoyer un mail</a>` : '';
   content.innerHTML = `
     <div class="sheet-handle"></div>
     <div class="sheet-title">${f.Nom || ''}</div>
-    <div class="dtl-card" style="margin-top:16px">
+    <div class="dtl-card" style="margin-top:16px;margin-bottom:16px">
       <div class="dtl-row"><span class="dtl-k">Téléphone</span><span class="dtl-v">${f.Tel || '—'}</span></div>
       <div class="dtl-row"><span class="dtl-k">Email</span><span class="dtl-v" style="font-size:12px">${f.Email || '—'}</span></div>
       <div class="dtl-row" style="border-bottom:none"><span class="dtl-k">Adresse</span><span class="dtl-v" style="font-size:12px;max-width:180px;text-align:right">${f.Adresse || '—'}</span></div>
     </div>
-    <button class="btn-p" onclick="openSheet('new-devis')">Nouveau devis</button>
+    ${telBtn}${mailBtn}
+    <button class="btn-p" onclick="openSheet('new-devis')" style="margin-bottom:10px">Nouveau devis</button>
     <button class="btn-s" onclick="closeSheet()">Fermer</button>`;
   overlay.classList.add('open');
   lucide.createIcons();
