@@ -766,7 +766,7 @@
     <span class="hdr-back-title">Mes clients</span>
   </header>
   <div class="sec" style="margin-top:16px">
-    <div class="card-list">
+    <div class="card-list" id="at-clients-container">
       <div class="client-item" onclick="showView('client-detail','berger')">
         <div class="client-av">SB</div>
         <div class="client-body">
@@ -1496,6 +1496,61 @@ async function submitNewDevis() {
   }
 }
 
+function atClientInitiales(nom) {
+  return (nom || '').split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function atClientItemHTML(record) {
+  const f = record.fields;
+  const id = record.id;
+  const initiales = atClientInitiales(f.Nom);
+  const meta = [f.Tel, f.Email].filter(Boolean).join(' · ') || f.Adresse || '';
+  return `<div class="client-item" onclick="openAtClientSheet('${id}')">
+    <div class="client-av">${initiales}</div>
+    <div class="client-body">
+      <div class="client-name">${f.Nom || ''}</div>
+      <div class="client-meta">${meta}</div>
+    </div>
+    <i data-lucide="chevron-right" width="16" height="16" style="color:var(--muted)"></i>
+  </div>`;
+}
+
+async function loadClientsFromAirtable() {
+  try {
+    const res = await fetch(CLIENTS_PROXY_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const records = (data.records || []).filter(r => r.fields && r.fields.Nom);
+    if (!records.length) return;
+    records.forEach(r => { AIRTABLE_CLIENTS[r.id] = r; });
+    const container = document.getElementById('at-clients-container');
+    if (!container) return;
+    const atHtml = records.map(r => atClientItemHTML(r)).join('');
+    container.innerHTML = atHtml;
+    lucide.createIcons();
+  } catch(e) {}
+}
+
+function openAtClientSheet(id) {
+  const record = AIRTABLE_CLIENTS[id];
+  if (!record) return;
+  const f = record.fields;
+  const overlay = document.getElementById('overlay');
+  const content = document.getElementById('sheet-content');
+  content.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">${f.Nom || ''}</div>
+    <div class="dtl-card" style="margin-top:16px">
+      <div class="dtl-row"><span class="dtl-k">Téléphone</span><span class="dtl-v">${f.Tel || '—'}</span></div>
+      <div class="dtl-row"><span class="dtl-k">Email</span><span class="dtl-v" style="font-size:12px">${f.Email || '—'}</span></div>
+      <div class="dtl-row" style="border-bottom:none"><span class="dtl-k">Adresse</span><span class="dtl-v" style="font-size:12px;max-width:180px;text-align:right">${f.Adresse || '—'}</span></div>
+    </div>
+    <button class="btn-p" onclick="openSheet('new-devis')">Nouveau devis</button>
+    <button class="btn-s" onclick="closeSheet()">Fermer</button>`;
+  overlay.classList.add('open');
+  lucide.createIcons();
+}
+
 async function submitNewClient() {
   const nom     = (document.getElementById('nc-nom')?.value     || '').trim();
   const tel     = (document.getElementById('nc-tel')?.value     || '').trim();
@@ -1579,6 +1634,8 @@ const FACTURES_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monate
 const DEVIS_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-devis';
 const FACTURES_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-facture';
 const CLIENTS_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-client';
+const CLIENTS_PROXY_URL  = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-clients';
+const AIRTABLE_CLIENTS = {};
 const AIRTABLE_DEVIS = {};
 const AIRTABLE_FACTURES = {};
 
@@ -1811,6 +1868,7 @@ loadMailsFromAirtable();
 setInterval(loadMailsFromAirtable, 60000);
 loadDevisFromAirtable();
 loadFacturesFromAirtable();
+loadClientsFromAirtable();
 
 function loadAirtableMailDetail(id) {
   const record = AIRTABLE_MAILS[id];
