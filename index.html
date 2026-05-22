@@ -1410,11 +1410,11 @@ function buildForm(type) {
       <button class="btn-p" id="nf-btn" onclick="submitNewFacture()">Créer la facture</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'new-client': `<div class="sheet-handle"></div><div class="sheet-title">Nouveau client</div>
-      <div class="fg"><label>Prénom et nom</label><input type="text" placeholder="Ex : Sophie Blanc"></div>
-      <div class="fg"><label>Téléphone</label><input type="tel" placeholder="06 ..."></div>
-      <div class="fg"><label>Email</label><input type="email" placeholder="email@exemple.fr"></div>
-      <div class="fg"><label>Adresse</label><input type="text" placeholder="Rue, ville"></div>
-      <button class="btn-p" onclick="formSubmit('Client ajouté à votre base')">Ajouter le client</button>
+      <div class="fg"><label>Prénom et nom</label><input id="nc-nom" type="text" placeholder="Ex : Sophie Blanc"></div>
+      <div class="fg"><label>Téléphone</label><input id="nc-tel" type="tel" placeholder="06 ..."></div>
+      <div class="fg"><label>Email</label><input id="nc-email" type="email" placeholder="email@exemple.fr"></div>
+      <div class="fg"><label>Adresse</label><input id="nc-adresse" type="text" placeholder="Rue, ville"></div>
+      <button class="btn-p" id="nc-btn" onclick="submitNewClient()">Ajouter le client</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'new-rappel': `<div class="sheet-handle"></div><div class="sheet-title">Nouveau rappel</div>
       <div class="fg"><label>Objet du rappel</label><input type="text" placeholder="Ex : Appeler Mme Blanc"></div>
@@ -1496,6 +1496,29 @@ async function submitNewDevis() {
   }
 }
 
+async function submitNewClient() {
+  const nom     = (document.getElementById('nc-nom')?.value     || '').trim();
+  const tel     = (document.getElementById('nc-tel')?.value     || '').trim();
+  const email   = (document.getElementById('nc-email')?.value   || '').trim();
+  const adresse = (document.getElementById('nc-adresse')?.value || '').trim();
+  if (!nom) { showToast('Le nom est requis'); return; }
+  const btn = document.getElementById('nc-btn');
+  btn.textContent = 'Enregistrement...'; btn.classList.add('loading');
+  try {
+    const res = await fetch(CLIENTS_CREATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Nom: nom, Tel: tel, Email: email, Adresse: adresse })
+    });
+    if (!res.ok) throw new Error('http ' + res.status);
+    closeSheet();
+    showToast('Client ajouté à votre base');
+  } catch(e) {
+    btn.textContent = 'Ajouter le client'; btn.classList.remove('loading');
+    showToast('Erreur réseau — réessaie');
+  }
+}
+
 async function submitNewFacture() {
   const client  = (document.getElementById('nf-client')?.value   || '').trim();
   const objet   = (document.getElementById('nf-objet')?.value    || '').trim();
@@ -1555,6 +1578,7 @@ const DEVIS_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelie
 const FACTURES_PROXY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-factures';
 const DEVIS_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-devis';
 const FACTURES_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-facture';
+const CLIENTS_CREATE_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-create-client';
 const AIRTABLE_DEVIS = {};
 const AIRTABLE_FACTURES = {};
 
