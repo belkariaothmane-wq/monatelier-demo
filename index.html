@@ -34,9 +34,9 @@
       padding: 14px 16px; display: flex; justify-content: space-between;
       align-items: center; position: sticky; top: 0; z-index: 100;
     }
-    .hdr-date { font-size: 11px; text-transform: uppercase; letter-spacing:.06em; color: var(--muted); font-weight:500; }
-    .hdr-name { font-size: 17px; font-weight: 700; letter-spacing:-.02em; line-height:1.2; }
-    .hdr-company { font-size: 12px; color: var(--muted); }
+    .hdr-date { font-size: 11px; text-transform: uppercase; letter-spacing:.07em; color: var(--muted); font-weight:500; margin-bottom:3px; }
+    .hdr-name { font-size: 22px; font-weight: 800; letter-spacing:-.03em; line-height:1.1; }
+    .hdr-company { font-size: 13px; font-weight:500; color: var(--accent); margin-top:1px; }
     .hdr-right { display:flex; align-items:center; gap:10px; }
     .notif-btn {
       width:34px; height:34px; border-radius:50%; background:var(--bg);
@@ -295,7 +295,7 @@
 <div id="view-home" class="view active">
   <header class="hdr">
     <div>
-      <div class="hdr-date">Mardi 20 mai 2026</div>
+      <div class="hdr-date" id="hdr-date"></div>
       <div class="hdr-name">Marc Lefèvre</div>
       <div class="hdr-company">Lefèvre Plomberie</div>
     </div>
@@ -2113,6 +2113,15 @@ async function loadMailsFromAirtable() {
     icons.forEach(el => el.classList.remove('spinning'));
   }
 }
+
+// Date du jour en temps réel
+(function() {
+  const el = document.getElementById('hdr-date');
+  if (!el) return;
+  const now = new Date();
+  const label = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  el.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+})();
 
 renderHomePlanning();
 loadMailsFromAirtable();
