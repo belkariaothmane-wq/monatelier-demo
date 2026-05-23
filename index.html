@@ -1368,6 +1368,11 @@ function facMarquerPaye() {
   setTimeout(() => goBack(), 1200);
 }
 
+function getCurrentReplyText() {
+  const el = document.getElementById('mail-d-reply');
+  return el ? (el.innerText || el.textContent || '').trim() : '';
+}
+
 // ── Bottom sheets ──────────────────────────────────────────────
 function openSheet(id) {
   const data = SHEETS[id];
@@ -1425,7 +1430,7 @@ function buildForm(type) {
       <button class="btn-p" onclick="formSubmit('Rappel programmé')">Programmer le rappel</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'edit-reply': `<div class="sheet-handle"></div><div class="sheet-title">Modifier la réponse</div>
-      <div class="fg"><label>Votre message</label><textarea style="min-height:160px" id="edit-reply-text">${MAILS[STATE.currentMail]?.reply?.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'') || ''}</textarea></div>
+      <div class="fg"><label>Votre message</label><textarea style="min-height:200px" id="edit-reply-text">${getCurrentReplyText()}</textarea></div>
       <button class="btn-p" onclick="formSubmit('Réponse modifiée envoyée')">Envoyer</button>
       <button class="btn-s" onclick="closeSheet()">Annuler</button>`,
     'edit-profil': `<div class="sheet-handle"></div><div class="sheet-title">Mon profil</div>
@@ -1981,6 +1986,32 @@ function renderHomePlanning() {
   lucide.createIcons();
 }
 
+// ── Génération réponse suggérée ────────────────────────────────
+function generateSuggestedReply(f) {
+  const rawSender = (f.Expediteur || '').replace(/<[^>]+>/g, '').trim();
+  const firstName = rawSender.split(/[\s,<@]/)[0] || '';
+  const salutation = `Bonjour${firstName ? ' ' + firstName : ''},\n\n`;
+  const signature  = '\n\nCordialement,\nMarc Lefèvre — Lefèvre Plomberie\nTél : 06 11 22 33 44';
+  const cat    = f.Categorie || '';
+  const action = (f.Action || '').toLowerCase();
+  const objet  = f.Objet || 'votre demande';
+
+  let body = '';
+  if (cat === 'Devis' || action.includes('devis')) {
+    body = `Je vous remercie pour votre demande concernant "${objet}".\n\nJe vais préparer votre devis et vous le ferai parvenir dans les meilleurs délais. Si vous avez des précisions à m'apporter (surface, matériaux souhaités, contraintes d'accès), n'hésitez pas à me les indiquer.`;
+  } else if (cat === 'Urgence') {
+    body = `J'ai bien pris connaissance de votre message et je comprends l'urgence de la situation.\n\nJe vais organiser une intervention dans les plus brefs délais. Pouvez-vous me confirmer vos disponibilités pour aujourd'hui ou demain matin ?`;
+  } else if (cat === 'Paiement') {
+    body = `Je vous remercie pour votre message concernant "${objet}".\n\nJe fais le point sur ce dossier et vous apporte une réponse complète très rapidement. N'hésitez pas à me préciser votre question si nécessaire.`;
+  } else if (cat === 'Fournisseur') {
+    body = `Bien reçu, merci pour cette information.\n\nJe prends note et reviendrai vers vous si nécessaire.`;
+  } else {
+    body = `Je vous remercie pour votre message concernant "${objet}".\n\nJe reviens vers vous dans les meilleurs délais.`;
+  }
+
+  return salutation + body + signature;
+}
+
 // ── Hooks n8n Phase 2 ──────────────────────────────────────────
 const SEND_REPLY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-send-reply';
 
@@ -2110,11 +2141,10 @@ function loadAirtableMailDetail(id) {
   const score = f.Urgence_Score;
   document.getElementById('mail-d-score').innerHTML = score != null ? `<span style="font-weight:600;color:${score >= 7 ? 'var(--danger)' : score >= 4 ? 'var(--warn)' : 'var(--muted)'}">${score}/10</span>` : '—';
   const replyEl = document.getElementById('mail-d-reply');
-  if (f.Resume) {
-    replyEl.textContent = f.Resume;
-  } else {
-    replyEl.innerHTML = '<span style="color:var(--muted);font-size:12px">Réponse non disponible</span>';
-  }
+  const suggestedReply = f.Reponse || generateSuggestedReply(f);
+  replyEl.style.whiteSpace = 'pre-line';
+  replyEl.textContent = suggestedReply || '';
+  if (!suggestedReply) replyEl.innerHTML = '<span style="color:var(--muted);font-size:12px">Réponse non disponible</span>';
   showView('mail-detail');
 }
 </script>
