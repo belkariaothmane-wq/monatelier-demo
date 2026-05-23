@@ -235,6 +235,37 @@
     .chantier-date { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.05em; }
     .chantier-objet { font-size:14px; font-weight:500; margin-top:2px; }
 
+    /* ── Calendrier ── */
+    .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .cal-month-title { font-size:15px; font-weight:700; letter-spacing:-.01em; }
+    .cal-nav-btn { width:30px; height:30px; border-radius:50%; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); }
+    .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:2px; }
+    .cal-wd { text-align:center; font-size:10px; font-weight:600; color:var(--muted); padding:3px 0; }
+    .cal-grid-cells { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; }
+    .cal-cell { min-height:40px; display:flex; flex-direction:column; align-items:center; padding:5px 2px 3px; cursor:pointer; border-radius:8px; transition:background .1s; }
+    .cal-cell.empty { cursor:default; pointer-events:none; }
+    .cal-cell:not(.empty):active { background:var(--bg); }
+    .cal-cell.today .cal-num { background:var(--accent); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; }
+    .cal-cell.selected:not(.today) { background:var(--accent-light); border-radius:8px; }
+    .cal-num { font-size:13px; font-weight:500; line-height:1.7; }
+    .cal-cell.other-month .cal-num { color:var(--border); }
+    .cal-dots { display:flex; gap:2px; margin-top:1px; }
+    .cal-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+    .cal-dot-rdv      { background:var(--accent); }
+    .cal-dot-echeance { background:var(--warn); }
+    .cal-dot-rappel   { background:var(--danger); }
+    .cal-legend { display:flex; gap:14px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .cal-legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+    .event-item { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); align-items:flex-start; cursor:pointer; }
+    .event-item:last-child { border-bottom:none; padding-bottom:0; }
+    .event-item:active { opacity:.75; }
+    .event-body { flex:1; min-width:0; }
+    .event-title { font-size:14px; font-weight:500; line-height:1.35; }
+    .event-meta  { font-size:12px; color:var(--muted); margin-top:3px; }
+    .plan-upcoming { display:flex; align-items:center; gap:10px; padding:10px 16px; border-top:1px solid var(--border); background:var(--bg); }
+    .plan-upcoming-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+    .plan-upcoming-text { font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
     /* ── Statistiques ── */
     .stat-kpi-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .stat-kpi { background:var(--card); border-radius:12px; border:1px solid var(--border); padding:14px; box-shadow:var(--shadow); }
@@ -341,27 +372,21 @@
       <span class="sec-title">Boîte de réception</span>
       <div style="display:flex;align-items:center;gap:8px">
         <button onclick="triggerRefreshMails()" style="background:none;border:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;padding:0;" title="Rafraîchir les mails"><i data-lucide="refresh-cw" width="13" height="13" id="refresh-icon-home"></i></button>
-        <span class="sec-count" id="mail-count-home">4 non lus</span>
+        <span class="sec-count" id="mail-count-home">3 non lus</span>
       </div>
     </div>
     <div class="card-list" id="home-mails-container">
-      <div class="mail-item" id="home-mail-blanc" onclick="showView('mail-detail', 'blanc')">
-        <div class="mail-top"><span class="mail-sender">Mme Blanc</span><span class="mail-time">09:14</span></div>
-        <div class="mail-subj">Demande de devis — rénovation salle de bain</div>
-        <div class="mail-prev">Bonjour, je souhaiterais un devis pour la rénovation complète...</div>
-        <span class="badge bd-accent">Devis</span>
-      </div>
       <div class="mail-item" id="home-mail-bernard" onclick="showView('mail-detail', 'bernard')">
         <div class="mail-top"><span class="mail-sender">M. Bernard</span><span class="mail-time">08:45</span></div>
         <div class="mail-subj">Fuite urgente — intervention dès que possible</div>
         <div class="mail-prev">Bonjour Jean-Marc, j'ai une fuite dans ma cuisine depuis ce matin...</div>
         <span class="badge bd-danger">Urgence</span>
       </div>
-      <div class="mail-item" id="home-mail-fournisseur" onclick="showView('mail-detail', 'fournisseur')">
-        <div class="mail-top"><span class="mail-sender">Plomberie Pro</span><span class="mail-time">Hier</span></div>
-        <div class="mail-subj">Commande n°4872 — confirmation livraison</div>
-        <div class="mail-prev">Votre commande sera livrée jeudi 23 mai entre 8h et 12h...</div>
-        <span class="badge bd-neutral">Fournisseur</span>
+      <div class="mail-item" id="home-mail-blanc" onclick="showView('mail-detail', 'blanc')">
+        <div class="mail-top"><span class="mail-sender">Mme Blanc</span><span class="mail-time">09:14</span></div>
+        <div class="mail-subj">Demande de devis — rénovation salle de bain</div>
+        <div class="mail-prev">Bonjour, je souhaiterais un devis pour la rénovation complète...</div>
+        <span class="badge bd-accent">Devis</span>
       </div>
       <div class="mail-item" id="home-mail-martin" onclick="showView('mail-detail', 'martin')">
         <div class="mail-top"><span class="mail-sender">Martin SARL</span><span class="mail-time">Hier</span></div>
@@ -378,40 +403,8 @@
       <span class="sec-title">Planning du jour</span>
       <button class="sec-link" onclick="showView('planning')">Calendrier</button>
     </div>
-    <div class="card-list">
-      <div class="plan-item" onclick="openSheet('rdv-dupont')">
-        <div>
-          <div class="plan-time">10:30</div>
-          <div class="plan-dur">1 h</div>
-        </div>
-        <div class="plan-info">
-          <div class="plan-title">Mme Berger — Villa Garance</div>
-          <div class="plan-addr"><i data-lucide="map-pin" width="10" height="10"></i> 14 rue des Tilleuls, Vincennes</div>
-        </div>
-        <span class="badge bd-accent">Confirmé</span>
-      </div>
-      <div class="plan-item" onclick="openSheet('rdv-girard')">
-        <div>
-          <div class="plan-time">14:00</div>
-          <div class="plan-dur">1 h 30</div>
-        </div>
-        <div class="plan-info">
-          <div class="plan-title">M. Vidal — Diagnostic fuite</div>
-          <div class="plan-addr"><i data-lucide="map-pin" width="10" height="10"></i> 7 avenue Gambetta, Montreuil</div>
-        </div>
-        <span class="badge bd-warn">À confirmer</span>
-      </div>
-      <div class="plan-item" onclick="openSheet('rdv-blanc')">
-        <div>
-          <div class="plan-time">17:30</div>
-          <div class="plan-dur">2 h</div>
-        </div>
-        <div class="plan-info">
-          <div class="plan-title">Cabinet Rousseau — Pose robinetterie</div>
-          <div class="plan-addr"><i data-lucide="map-pin" width="10" height="10"></i> 3 rue des Pins, Vincennes</div>
-        </div>
-        <span class="badge bd-accent">Confirmé</span>
-      </div>
+    <div class="card-list" id="home-planning-container">
+      <div class="empty">Chargement...</div>
     </div>
   </div>
 
@@ -623,53 +616,41 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     VUE : PLANNING
+     VUE : PLANNING / CALENDRIER
 ════════════════════════════════════════════ -->
 <div id="view-planning" class="view">
   <header class="hdr-back">
     <button class="back-btn" onclick="goBack()"><i data-lucide="chevron-left" width="18" height="18"></i> Retour</button>
     <span class="hdr-back-title">Calendrier</span>
+    <button onclick="calGoToday()" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;margin-left:auto;padding:0">Aujourd'hui</button>
   </header>
+
+  <!-- Grille calendrier -->
   <div class="sec" style="margin-top:16px">
-    <div class="sec-hdr"><span class="sec-title">Mardi 20 mai</span></div>
-    <div class="card-list">
-      <div class="plan-item" onclick="openSheet('rdv-dupont')">
-        <div><div class="plan-time">10:30</div><div class="plan-dur">1 h</div></div>
-        <div class="plan-info">
-          <div class="plan-title">Mme Berger — Villa Garance</div>
-          <div class="plan-addr">14 rue des Tilleuls, Vincennes</div>
-        </div>
-        <span class="badge bd-accent">Confirmé</span>
+    <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);padding:14px 16px">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calPrevMonth()"><i data-lucide="chevron-left" width="14" height="14"></i></button>
+        <span class="cal-month-title" id="cal-month-title">Mai 2026</span>
+        <button class="cal-nav-btn" onclick="calNextMonth()"><i data-lucide="chevron-right" width="14" height="14"></i></button>
       </div>
-      <div class="plan-item" onclick="openSheet('rdv-girard')">
-        <div><div class="plan-time">14:00</div><div class="plan-dur">1 h 30</div></div>
-        <div class="plan-info">
-          <div class="plan-title">M. Vidal — Diagnostic fuite</div>
-          <div class="plan-addr">7 avenue Gambetta, Montreuil</div>
-        </div>
-        <span class="badge bd-warn">À confirmer</span>
+      <div class="cal-weekdays">
+        <div class="cal-wd">L</div><div class="cal-wd">M</div><div class="cal-wd">M</div>
+        <div class="cal-wd">J</div><div class="cal-wd">V</div><div class="cal-wd">S</div><div class="cal-wd">D</div>
       </div>
-      <div class="plan-item" onclick="openSheet('rdv-blanc')">
-        <div><div class="plan-time">17:30</div><div class="plan-dur">2 h</div></div>
-        <div class="plan-info">
-          <div class="plan-title">Cabinet Rousseau — Pose robinetterie</div>
-          <div class="plan-addr">3 rue des Pins, Vincennes</div>
-        </div>
-        <span class="badge bd-accent">Confirmé</span>
+      <div class="cal-grid-cells" id="cal-grid"></div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-dot cal-dot-rdv"></div> RDV</div>
+        <div class="cal-legend-item"><div class="cal-dot cal-dot-echeance"></div> Échéance</div>
+        <div class="cal-legend-item"><div class="cal-dot cal-dot-rappel"></div> Rappel</div>
       </div>
     </div>
   </div>
-  <div class="sec" style="margin-top:16px">
-    <div class="sec-hdr"><span class="sec-title">Mercredi 21 mai</span></div>
-    <div class="card-list">
-      <div class="plan-item">
-        <div><div class="plan-time">09:00</div><div class="plan-dur">3 h</div></div>
-        <div class="plan-info">
-          <div class="plan-title">Chantier Lambert — Installation chaudière</div>
-          <div class="plan-addr">22 bd de la Liberté, Paris 11e</div>
-        </div>
-        <span class="badge bd-accent">Confirmé</span>
-      </div>
+
+  <!-- Événements du jour sélectionné -->
+  <div class="sec" style="margin-bottom:8px">
+    <div class="sec-hdr"><span class="sec-title" id="cal-day-label">Sélectionne un jour</span></div>
+    <div class="card-list" style="padding:0 16px" id="cal-events-list">
+      <div class="empty">Appuie sur un jour pour voir ses événements</div>
     </div>
   </div>
 </div>
@@ -941,7 +922,7 @@
   </div>
   <div class="nav-item" id="nav-mails" onclick="showView('mails')">
     <i data-lucide="mail" width="20" height="20" class="nav-ico" id="nav-ico-mails"></i>
-    <span class="nav-badge" id="mail-nav-badge">4</span>
+    <span class="nav-badge" id="mail-nav-badge">3</span>
     <span class="nav-lbl" id="nav-lbl-mails">Mails</span>
   </div>
   <div class="nav-item" id="nav-devis" onclick="showView('devis')">
@@ -976,9 +957,26 @@
 <script>
 lucide.createIcons();
 
+// ── Date démo ─────────────────────────────────────────────────
+const DEMO_TODAY = '2026-05-20';
+
+// ── Événements (RDV + échéances + rappels) ─────────────────────
+const EVENTS = [
+  { id:'ev1', date:'2026-05-20', time:'10:30', duree:'1h',   titre:'Mme Berger — Villa Garance',            adresse:'14 rue des Tilleuls, Vincennes',    type:'rdv',      statut:'confirmé' },
+  { id:'ev2', date:'2026-05-20', time:'14:00', duree:'1h30', titre:'M. Vidal — Diagnostic fuite',           adresse:'7 avenue Gambetta, Montreuil',      type:'rdv',      statut:'a-confirmer' },
+  { id:'ev3', date:'2026-05-20', time:'17:30', duree:'2h',   titre:'Cabinet Rousseau — Pose robinetterie',  adresse:'3 rue des Pins, Vincennes',         type:'rdv',      statut:'confirmé' },
+  { id:'ev4', date:'2026-05-21', time:'09:00', duree:'3h',   titre:'Chantier Lambert — Installation chaudière', adresse:'22 bd de la Liberté, Paris 11e', type:'rdv',    statut:'confirmé' },
+  { id:'ev5', date:'2026-05-23', time:null,                  titre:'Livraison commande n°4872',             adresse:'Adresse professionnelle',           type:'rappel',   statut:null },
+  { id:'ev6', date:'2026-05-25', time:null,                  titre:'Échéance facture — Martin SARL 880 €',  adresse:null,                                type:'echeance', statut:'urgent' },
+  { id:'ev7', date:'2026-05-28', time:'14:00', duree:'1h',   titre:'RDV devis — Mme Lebrun',               adresse:'À confirmer',                       type:'rdv',      statut:'a-confirmer' },
+  { id:'ev8', date:'2026-06-02', time:'09:00', duree:'3h',   titre:'Démarrage chantier Berger',             adresse:'14 rue des Tilleuls, Vincennes',    type:'rdv',      statut:'confirmé' },
+  { id:'ev9', date:'2026-06-05', time:null,                  titre:'Rappel — Relancer Dupont SARL',         adresse:null,                                type:'rappel',   statut:null },
+  { id:'ev10',date:'2026-06-15', time:null,                  titre:'Échéance facture — Dupont SARL 1 840 €',adresse:null,                                type:'echeance', statut:'urgent' },
+];
+
 // ── State ──────────────────────────────────────────────────────
 const STATE = {
-  mailCount: 4,
+  mailCount: 3,
   readMails: new Set(),
   devisStatus: { berger:'En attente', rousseau:'Accepté', vidal:'Brouillon' },
   facStatus: { dupont:'En retard', martin:'À relancer', vidal:'Payée', berger:'Payée' },
@@ -1168,6 +1166,7 @@ function showView(name, param) {
   if (name === 'facture-detail' && param) loadFacDetail(param);
   if (name === 'client-detail' && param) loadClientDetail(param);
   if (name === 'stats') renderBarChart();
+  if (name === 'planning') { renderCalendar(); renderCalEvents(CAL.selectedDate || DEMO_TODAY); }
   if (name === 'devis') loadDevisFromAirtable();
   if (name === 'factures') loadFacturesFromAirtable();
 
@@ -1789,6 +1788,199 @@ function loadAirtableFactureDetail(id) {
   showView('facture-detail');
 }
 
+// ── Calendrier ────────────────────────────────────────────────
+const MOIS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const CAL = { year: 2026, month: 4, selectedDate: DEMO_TODAY };
+
+function calGoToday() {
+  CAL.year = 2026; CAL.month = 4; CAL.selectedDate = DEMO_TODAY;
+  renderCalendar(); renderCalEvents(DEMO_TODAY);
+}
+function calPrevMonth() {
+  if (CAL.month === 0) { CAL.month = 11; CAL.year--; } else CAL.month--;
+  renderCalendar();
+}
+function calNextMonth() {
+  if (CAL.month === 11) { CAL.month = 0; CAL.year++; } else CAL.month++;
+  renderCalendar();
+}
+function calSelectDay(dateStr) {
+  CAL.selectedDate = dateStr;
+  renderCalendar();
+  renderCalEvents(dateStr);
+}
+
+function renderCalendar() {
+  const { year, month, selectedDate } = CAL;
+  document.getElementById('cal-month-title').textContent = `${MOIS_FR[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay  = new Date(year, month + 1, 0);
+
+  // Monday-first: 0=Mon … 6=Sun
+  let startDow = firstDay.getDay();
+  startDow = startDow === 0 ? 6 : startDow - 1;
+
+  // Build event map for this month
+  const eventMap = {};
+  EVENTS.forEach(ev => {
+    if (!eventMap[ev.date]) eventMap[ev.date] = new Set();
+    eventMap[ev.date].add(ev.type);
+  });
+
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += `<div class="cal-cell empty"></div>`;
+
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday    = dateStr === DEMO_TODAY;
+    const isSelected = dateStr === selectedDate;
+    const types = eventMap[dateStr];
+
+    let dots = '';
+    if (types) {
+      if (types.has('rdv'))      dots += `<div class="cal-dot cal-dot-rdv"></div>`;
+      if (types.has('echeance')) dots += `<div class="cal-dot cal-dot-echeance"></div>`;
+      if (types.has('rappel'))   dots += `<div class="cal-dot cal-dot-rappel"></div>`;
+    }
+
+    const cls = ['cal-cell', isToday ? 'today' : '', isSelected ? 'selected' : ''].filter(Boolean).join(' ');
+    cells += `<div class="${cls}" onclick="calSelectDay('${dateStr}')">
+      <div class="cal-num">${d}</div>
+      ${dots ? `<div class="cal-dots">${dots}</div>` : ''}
+    </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = cells;
+  lucide.createIcons();
+}
+
+function renderCalEvents(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const label = d.toLocaleDateString('fr', { weekday:'long', day:'numeric', month:'long' });
+  const labelEl = document.getElementById('cal-day-label');
+  if (labelEl) labelEl.textContent = label.charAt(0).toUpperCase() + label.slice(1);
+
+  const events = EVENTS.filter(ev => ev.date === dateStr)
+    .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+  const container = document.getElementById('cal-events-list');
+  if (!container) return;
+
+  if (!events.length) {
+    container.innerHTML = `<div class="empty">Aucun événement ce jour</div>`;
+    return;
+  }
+
+  const typeIcon  = { rdv:'calendar', echeance:'alert-circle', rappel:'bell' };
+  const typeClass = { rdv:'ic-accent', echeance:'ic-danger', rappel:'ic-warn' };
+  const typeBadgeFn = ev => {
+    if (ev.type === 'rdv')      return `<span class="badge ${ev.statut === 'confirmé' ? 'bd-accent' : 'bd-warn'}">${ev.statut === 'confirmé' ? 'Confirmé' : 'À confirmer'}</span>`;
+    if (ev.type === 'echeance') return `<span class="badge bd-danger">Échéance</span>`;
+    return `<span class="badge bd-blue">Rappel</span>`;
+  };
+
+  container.innerHTML = events.map(ev => `
+    <div class="event-item" onclick="openEventSheet('${ev.id}')">
+      <div class="li-icon ${typeClass[ev.type]}" style="margin-top:2px;flex-shrink:0">
+        <i data-lucide="${typeIcon[ev.type]}" width="15" height="15"></i>
+      </div>
+      <div class="event-body">
+        <div class="event-title">${ev.titre}</div>
+        ${ev.adresse ? `<div class="event-meta"><i data-lucide="map-pin" width="10" height="10"></i> ${ev.adresse}</div>` : ''}
+        <div style="margin-top:5px;display:flex;align-items:center;gap:8px">
+          ${typeBadgeFn(ev)}
+          ${ev.time ? `<span style="font-size:12px;color:var(--muted)">${ev.time}${ev.duree ? ' · '+ev.duree : ''}</span>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+  lucide.createIcons();
+}
+
+function openEventSheet(id) {
+  const ev = EVENTS.find(e => e.id === id);
+  if (!ev) return;
+  const d = new Date(ev.date + 'T12:00:00');
+  const dateLabel = d.toLocaleDateString('fr', { weekday:'long', day:'numeric', month:'long' });
+  const typeLabel = ev.type === 'rdv' ? 'Rendez-vous' : ev.type === 'echeance' ? 'Échéance' : 'Rappel';
+  const bgColor   = ev.type === 'rdv' ? 'var(--accent-light)' : ev.type === 'echeance' ? 'var(--danger-light)' : 'var(--warn-light)';
+  const fgColor   = ev.type === 'rdv' ? 'var(--accent)' : ev.type === 'echeance' ? 'var(--danger)' : 'var(--warn)';
+  const icon      = ev.type === 'rdv' ? 'calendar' : 'bell';
+
+  let rows = `<div class="dtl-row"><span class="dtl-k">Date</span><span class="dtl-v">${dateLabel.charAt(0).toUpperCase()+dateLabel.slice(1)}</span></div>`;
+  if (ev.time) rows += `<div class="dtl-row"><span class="dtl-k">Heure</span><span class="dtl-v">${ev.time}${ev.duree ? ' · '+ev.duree : ''}</span></div>`;
+  if (ev.adresse) rows += `<div class="dtl-row"><span class="dtl-k">Adresse</span><span class="dtl-v" style="max-width:180px;text-align:right;font-size:12px">${ev.adresse}</span></div>`;
+  if (ev.statut)  rows += `<div class="dtl-row" style="border-bottom:none"><span class="dtl-k">Statut</span><span class="dtl-v"><span class="badge ${ev.statut==='confirmé'?'bd-accent':ev.statut==='urgent'?'bd-danger':'bd-warn'}">${ev.statut==='a-confirmer'?'À confirmer':ev.statut}</span></span></div>`;
+
+  const mapsBtn = ev.adresse && ev.adresse !== 'À confirmer'
+    ? `<button class="btn-p" style="display:flex;align-items:center;justify-content:center;gap:8px" onclick="showToast('Ouverture Maps simulée');closeSheet()"><i data-lucide="map-pin" width="14" height="14"></i> Itinéraire</button>`
+    : '';
+
+  const overlay = document.getElementById('overlay');
+  document.getElementById('sheet-content').innerHTML = `
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <div class="li-icon" style="background:${bgColor};color:${fgColor}">
+        <i data-lucide="${icon}" width="16" height="16"></i>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">${typeLabel}</div>
+        <div class="sheet-title" style="margin-bottom:0;font-size:15px">${ev.titre}</div>
+      </div>
+    </div>
+    <div class="dtl-card" style="margin-bottom:16px">${rows}</div>
+    ${mapsBtn}
+    <button class="btn-s" onclick="closeSheet()">Fermer</button>`;
+  overlay.classList.add('open');
+  lucide.createIcons();
+}
+
+// ── Planning accueil (aujourd'hui + prochain) ──────────────────
+function renderHomePlanning() {
+  const todayEvents = EVENTS
+    .filter(ev => ev.date === DEMO_TODAY && ev.type === 'rdv')
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+  const nextEvent = EVENTS
+    .filter(ev => ev.date > DEMO_TODAY && (ev.type === 'rdv' || ev.type === 'echeance'))
+    .sort((a, b) => a.date.localeCompare(b.date) || (a.time||'').localeCompare(b.time||''))[0];
+
+  const container = document.getElementById('home-planning-container');
+  if (!container) return;
+
+  if (!todayEvents.length && !nextEvent) {
+    container.innerHTML = '<div class="empty">Aucun RDV à venir</div>';
+    return;
+  }
+
+  const itemsHTML = todayEvents.map(ev => `
+    <div class="plan-item" onclick="openEventSheet('${ev.id}')">
+      <div><div class="plan-time">${ev.time}</div><div class="plan-dur">${ev.duree||''}</div></div>
+      <div class="plan-info">
+        <div class="plan-title">${ev.titre}</div>
+        <div class="plan-addr"><i data-lucide="map-pin" width="10" height="10"></i> ${ev.adresse||''}</div>
+      </div>
+      <span class="badge ${ev.statut==='confirmé'?'bd-accent':'bd-warn'}">${ev.statut==='confirmé'?'Confirmé':'À confirmer'}</span>
+    </div>`).join('');
+
+  let upcomingHTML = '';
+  if (nextEvent) {
+    const d = new Date(nextEvent.date + 'T12:00:00');
+    const label = d.toLocaleDateString('fr', { weekday:'short', day:'numeric', month:'short' });
+    const badge = nextEvent.type === 'echeance'
+      ? `<span class="badge bd-danger" style="flex-shrink:0">Échéance</span>`
+      : `<span class="badge bd-blue" style="flex-shrink:0">${label}</span>`;
+    upcomingHTML = `<div class="plan-upcoming" onclick="openEventSheet('${nextEvent.id}')">
+      <span class="plan-upcoming-label">À venir</span>
+      <span class="plan-upcoming-text">${nextEvent.titre}</span>
+      ${badge}
+    </div>`;
+  }
+
+  container.innerHTML = itemsHTML + upcomingHTML;
+  lucide.createIcons();
+}
+
 // ── Hooks n8n Phase 2 ──────────────────────────────────────────
 const SEND_REPLY_URL = 'https://othmanebelkaria.app.n8n.cloud/webhook/monatelier-send-reply';
 
@@ -1864,15 +2056,22 @@ async function loadMailsFromAirtable() {
 
     records.forEach(r => { AIRTABLE_MAILS[r.id] = r; });
 
-    const count = records.length;
-    STATE.mailCount = count;
+    const priorityOrder = { haute: 0, moyenne: 1 };
+    const homeMails = records
+      .filter(r => ['haute', 'moyenne'].includes(r.fields.Priorite))
+      .sort((a, b) => (priorityOrder[a.fields.Priorite] ?? 2) - (priorityOrder[b.fields.Priorite] ?? 2));
+
+    const homeCount = homeMails.length;
+    STATE.mailCount = records.length;
     const badge = document.getElementById('mail-nav-badge');
-    if (badge) { badge.textContent = count; badge.style.display = count ? '' : 'none'; }
+    if (badge) { badge.textContent = records.length; badge.style.display = records.length ? '' : 'none'; }
     const hc = document.getElementById('mail-count-home');
-    if (hc) hc.textContent = `${count} non lu${count > 1 ? 's' : ''}`;
+    if (hc) hc.textContent = homeCount > 0 ? `${homeCount} non lu${homeCount > 1 ? 's' : ''}` : 'À jour';
 
     const homeEl = document.getElementById('home-mails-container');
-    if (homeEl) homeEl.innerHTML = records.slice(0, 4).map(r => atMailItemHTML(r, 'home-at')).join('');
+    if (homeEl) homeEl.innerHTML = homeMails.length
+      ? homeMails.map(r => atMailItemHTML(r, 'home-at')).join('')
+      : '<div class="empty">Aucun mail prioritaire</div>';
 
     const allEl = document.getElementById('all-mails-container');
     if (allEl) allEl.innerHTML = records.map(r => atMailItemHTML(r, 'at-mail')).join('');
@@ -1884,6 +2083,7 @@ async function loadMailsFromAirtable() {
   }
 }
 
+renderHomePlanning();
 loadMailsFromAirtable();
 setInterval(loadMailsFromAirtable, 60000);
 loadDevisFromAirtable();
