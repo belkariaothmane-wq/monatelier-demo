@@ -506,6 +506,14 @@
     </div>
     <button class="btn-p" id="mail-d-btn-send" onclick="sendMailReply()">Envoyer cette réponse</button>
     <button class="btn-s" onclick="openSheet('edit-reply')">Modifier avant d'envoyer</button>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn-s" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="archiveCurrentMail()">
+        <i data-lucide="archive" width="14" height="14"></i> Archiver
+      </button>
+      <button class="btn-s" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--danger);border-color:var(--danger-light)" onclick="deleteCurrentMail()">
+        <i data-lucide="trash-2" width="14" height="14"></i> Supprimer
+      </button>
+    </div>
   </div>
 </div>
 
@@ -978,6 +986,8 @@ const EVENTS = [
 const STATE = {
   mailCount: 3,
   readMails: new Set(),
+  archivedMails: new Set(),
+  deletedMails: new Set(),
   devisStatus: { berger:'En attente', rousseau:'Accepté', vidal:'Brouillon' },
   facStatus: { dupont:'En retard', martin:'À relancer', vidal:'Payée', berger:'Payée' },
   history: ['home'],
@@ -1366,6 +1376,40 @@ function facMarquerPaye() {
   showToast('Facture marquée comme payée');
   // handleCreateFacture(id); // TODO: N8N
   setTimeout(() => goBack(), 1200);
+}
+
+function removMailFromUI(id) {
+  [`home-mail-${id}`, `mail-list-${id}`, `home-at-${id}`, `at-mail-${id}`].forEach(eid => {
+    const el = document.getElementById(eid);
+    if (el) el.remove();
+  });
+  // Mettre à jour les compteurs
+  if (!STATE.readMails.has(id)) {
+    STATE.readMails.add(id);
+    STATE.mailCount = Math.max(0, STATE.mailCount - 1);
+    const badge = document.getElementById('mail-nav-badge');
+    if (badge) { badge.textContent = STATE.mailCount; badge.style.display = STATE.mailCount ? '' : 'none'; }
+    const hc = document.getElementById('mail-count-home');
+    if (hc) hc.textContent = STATE.mailCount > 0 ? `${STATE.mailCount} non lu${STATE.mailCount > 1 ? 's' : ''}` : 'À jour';
+  }
+}
+
+function archiveCurrentMail() {
+  const id = STATE.currentMail;
+  if (!id) return;
+  STATE.archivedMails.add(id);
+  removMailFromUI(id);
+  showToast('Mail archivé');
+  setTimeout(() => goBack(), 800);
+}
+
+function deleteCurrentMail() {
+  const id = STATE.currentMail;
+  if (!id) return;
+  STATE.deletedMails.add(id);
+  removMailFromUI(id);
+  showToast('Mail supprimé');
+  setTimeout(() => goBack(), 800);
 }
 
 function getCurrentReplyText() {
@@ -2087,17 +2131,20 @@ async function loadMailsFromAirtable() {
 
     records.forEach(r => { AIRTABLE_MAILS[r.id] = r; });
 
+    const visible = records.filter(r => !STATE.archivedMails.has(r.id) && !STATE.deletedMails.has(r.id));
+
     const priorityOrder = { haute: 0, moyenne: 1 };
-    const homeMails = records
+    const homeMails = visible
       .filter(r => ['haute', 'moyenne'].includes(r.fields.Priorite))
       .sort((a, b) => (priorityOrder[a.fields.Priorite] ?? 2) - (priorityOrder[b.fields.Priorite] ?? 2));
 
-    const homeCount = homeMails.length;
-    STATE.mailCount = records.length;
+    const unreadCount = visible.filter(r => !STATE.readMails.has(r.id)).length;
+    STATE.mailCount = unreadCount;
     const badge = document.getElementById('mail-nav-badge');
-    if (badge) { badge.textContent = records.length; badge.style.display = records.length ? '' : 'none'; }
+    if (badge) { badge.textContent = unreadCount; badge.style.display = unreadCount ? '' : 'none'; }
+    const homeUnread = homeMails.filter(r => !STATE.readMails.has(r.id)).length;
     const hc = document.getElementById('mail-count-home');
-    if (hc) hc.textContent = homeCount > 0 ? `${homeCount} non lu${homeCount > 1 ? 's' : ''}` : 'À jour';
+    if (hc) hc.textContent = homeUnread > 0 ? `${homeUnread} non lu${homeUnread > 1 ? 's' : ''}` : 'À jour';
 
     const homeEl = document.getElementById('home-mails-container');
     if (homeEl) homeEl.innerHTML = homeMails.length
@@ -2105,7 +2152,9 @@ async function loadMailsFromAirtable() {
       : '<div class="empty">Aucun mail prioritaire</div>';
 
     const allEl = document.getElementById('all-mails-container');
-    if (allEl) allEl.innerHTML = records.map(r => atMailItemHTML(r, 'at-mail')).join('');
+    if (allEl) allEl.innerHTML = visible.length
+      ? visible.map(r => atMailItemHTML(r, 'at-mail')).join('')
+      : '<div class="empty">Aucun mail</div>';
 
   } catch (e) { /* demo data reste visible en cas d'erreur */ }
   finally {
@@ -2154,6 +2203,7 @@ function loadAirtableMailDetail(id) {
   replyEl.style.whiteSpace = 'pre-line';
   replyEl.textContent = suggestedReply || '';
   if (!suggestedReply) replyEl.innerHTML = '<span style="color:var(--muted);font-size:12px">Réponse non disponible</span>';
+  markRead(id);
   showView('mail-detail');
 }
 </script>
